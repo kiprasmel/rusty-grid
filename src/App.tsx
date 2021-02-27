@@ -1,12 +1,17 @@
 import { css } from "emotion";
-import React from "react";
+import React, { useEffect } from "react";
 // import logo from "./logo.svg";
 // import { Counter } from "./features/counter/Counter";
 import "./App.css";
 
 import { Grid } from "./features/grid/Grid";
+import { loadShortestPath } from "./features/grid/gridSlice";
 
 function App() {
+	useEffect(() => {
+		loadShortestPath();
+	}, []);
+
 	return (
 		<div className="App">
 			<header

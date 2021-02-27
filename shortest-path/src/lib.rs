@@ -63,8 +63,8 @@ impl Square {
 
 #[wasm_bindgen]
 pub fn breath_first_search_shortest_path(
-	// rows: i32,
-	// cols: i32,
+	rows: usize,
+	cols: usize,
 	// start_row: i32,
 	// start_col: i32,
 	// end_row: i32,
@@ -74,19 +74,18 @@ pub fn breath_first_search_shortest_path(
 	square_rows: &[u32],
 	square_cols: &[u32],
 	square_states: &[u8],
+	// ) -> Vec<usize> {
 ) -> Vec<usize> {
-	return vec![69, 69];
-
 	let mut grid: Vec<Vec<Square>> = Vec::new();
 
 	let mut startMaybe: Option<Square> = None;
 	let mut endMaybe: Option<Square> = None;
 
-	for i in 0..square_rows.len() {
+	for i in 0..rows {
 		grid[i] = Vec::new();
 
-		for j in 0..square_cols.len() {
-			let state: SquareState = match square_states[square_cols.len() * i + j] {
+		for j in 0..cols {
+			let state: SquareState = match square_states[rows * i + j] {
 				0 => SquareState::Filled,
 				1 => SquareState::Clear,
 				2 => SquareState::Start,
@@ -128,6 +127,7 @@ pub fn breath_first_search_shortest_path(
 	while !done && (!frontier.is_empty() || !next.is_empty()) {
 		frontier = next.clone();
 		next.clear();
+		next = VecDeque::new();
 
 		if frontier.len() == 0 {
 			break;

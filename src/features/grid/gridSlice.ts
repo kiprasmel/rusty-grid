@@ -1,4 +1,8 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+/* eslint-disable */
+import { createSlice, PayloadAction, PrepareAction } from "@reduxjs/toolkit";
+
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as sp from "shortest-path/shortest_path";
 // eslint-disable-next-line import/no-cycle
 // import { AppThunk, RootState } from "../../app/store";
 
@@ -17,25 +21,65 @@ export type Square = {
 
 export type Grid = Square[][];
 
-const recomputeShortestPath = async (grid: Square[], rows: number, cols: number): Promise<Grid> => {
+// eslint-disable-next-line @typescript-eslint/camelcase
+let shortestPath: typeof sp.breath_first_search_shortest_path;
+
+export const loadShortestPath = async () => {
+	shortestPath = await (await import("../../../node_modules/shortest-path/shortest_path.js"))
+		.breath_first_search_shortest_path;
+};
+
+const recomputeShortestPath = (grid: Square[], rows: number, cols: number): Grid => {
 	// const squares: Square[] = grid.filter((square) => square.state === "clear");
 
 	// const clear_sq_rows = squares.map((sq) => sq.row);
 	// const clear_sq_cols = squares.map((sq) => sq.col);
 
 	// const preparedGrid = grid.map((sq) => ({ ...sq, state: swapState(sq.state) }));
+	if (!shortestPath) {
+		throw new Error("not loaded yet");
+	}
 
-	const shortestPath = await import("../../../node_modules/shortest-path/shortest_path.js");
+	console.log("import", shortestPath);
+	(window as any).sp = shortestPath;
 
-	const stuff = shortestPath.breath_first_search_shortest_path(
-		(grid.map((sq) => sq.row) as unknown) as Uint32Array,
-		(grid.map((sq) => sq.col) as unknown) as Uint32Array,
-		(grid.map((sq) => swapState(sq.state)) as unknown) as Uint8Array
-	);
+	// console.log("grid", grid);
+	const arg1 = (grid.map((sq) => sq.row) as unknown) as Uint32Array;
+	const arg2 = (grid.map((sq) => sq.col) as unknown) as Uint32Array;
+	const arg3 = (grid.map((sq) => swapState(sq.state)) as unknown) as Uint8Array;
 
-	console.error("stuff", stuff);
-	return [];
-	// return stuff;
+	// console.log(arg1, arg2, arg3);
+
+	const stuff = shortestPath(rows, cols, arg1, arg2, arg3);
+
+	let newRows = stuff.slice(0, stuff.length / 2);
+	let newCols = stuff.slice(stuff.length / 2);
+
+	let sp: Square[] = [];
+	for (let i = 0; i < newRows.length; i++) {
+		sp.push({row: newRows[i], col: newCols[i], isPartOfShortestPath: true, state: "clear"});
+	}
+
+	let updatedGrid: Square[] =  grid.map(sq => {
+		let found = sp.find(pathySq => sq.row === pathySq.row && sq.col === pathySq.col)
+		if (found) {
+			return found
+		}
+		return sq;
+	})
+
+	let unflattenedGrid: Grid = [];
+
+	for (let i =0; i<rows;i++) {
+		unflattenedGrid.push([])
+		for (let j =0;j<cols;j++) {
+			unflattenedGrid[i].push(updatedGrid[rows * i + j])
+		}
+	}
+
+	return unflattenedGrid;
+	// console.error("stuff", stuff);
+	// return [];
 };
 
 export const getPseudoRandomIdx = (maxExcl: number): number => Math.round(Math.random() * (maxExcl - 1));
@@ -91,31 +135,49 @@ export const slice = createSlice({
 			state.cols = state.dirtyCols;
 			state.grid = initGrid(state.dirtyRows, state.dirtyCols);
 		},
-		clickSquare: (state, action: PayloadAction<{ square: Square }>): void => {
-			const { square } = action.payload;
+		clickSquare: {
+			reducer: (state, action: PayloadAction<{ square: Square; grid: Grid }>): void => {
+				const { square, grid } = action.payload;
 
-			if (["start", "end"].includes(square.state)) {
-				return;
-			}
+				if (["start", "end"].includes(square.state)) {
+					return;
+				}
 
-			const target = state.grid.flat().find((sq) => sq.row === square.row && sq.col === square.col);
+				state.grid = grid;
+			},
+			prepare: (square: Square, grid: Grid) => {
+				let newGrid: Grid = grid.slice();
 
-			if (!target) {
-				return;
-			}
+				const target = newGrid.flat().find((sq) => sq.row === square.row && sq.col === square.col);
+				console.log("target", target)
 
-			if (square.state === "filled") {
-				target.state = "clear";
-			} else if (square.state === "clear") {
-				target.state = "filled";
-			} else {
-				throw new Error("invalid state");
-			}
+				if (!target) {
+					return {
+						payload: {
+							square,
+							grid: newGrid,
+						},
+					};
+				}
 
-			recomputeShortestPath(state.grid.flat(), state.rows, state.cols).then((res) => {
-				state.grid = res;
-				console.error("DONE SHORTEST ");
-			});
+				if (square.state === "filled") {
+					target.state = "clear";
+				} else if (square.state === "clear") {
+					target.state = "filled";
+				} else {
+					throw new Error("invalid state");
+				}
+
+				newGrid = recomputeShortestPath(newGrid.flat(), newGrid.length, newGrid[0].length);
+				console.log("newGrid", newGrid);
+
+				return {
+					payload: {
+						square,
+						grid: newGrid,
+					},
+				};
+			},
 		},
 	},
 });

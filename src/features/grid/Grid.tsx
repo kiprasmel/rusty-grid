@@ -253,7 +253,7 @@ export const Grid: FC = () => {
 									>
 										<button
 											type="button"
-											onClick={() => dispatch(clickSquare({ square }))}
+											onClick={() => dispatch(clickSquare(square, grid))}
 											className={css`
 												width: 100%;
 												height: 100%;
