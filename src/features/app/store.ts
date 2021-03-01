@@ -1,12 +1,10 @@
 import { configureStore, ThunkAction, Action, getDefaultMiddleware } from "@reduxjs/toolkit";
+
 // eslint-disable-next-line import/no-cycle
-import counterReducer from "../features/counter/counterSlice";
-// eslint-disable-next-line import/no-cycle
-import gridReducer from "../features/grid/gridSlice";
+import gridReducer from "../grid/gridSlice";
 
 export const store = configureStore({
 	reducer: {
-		counter: counterReducer,
 		grid: gridReducer,
 	},
 	middleware: getDefaultMiddleware({

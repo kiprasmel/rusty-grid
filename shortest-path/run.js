@@ -37,7 +37,7 @@ const run = async () => {
 	}
 
 	// const ret = sp.test(grid, rows, cols, start, end);
-	const ret = sp.breath_first_search_shortest_path(grid, rows, cols, start, end);
+	const ret = sp.breadth_first_search_shortest_path(grid, rows, cols, start, end);
 
 	console.log(ret, "\n\n");
 };
