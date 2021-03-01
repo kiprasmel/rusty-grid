@@ -9,17 +9,45 @@ import * as sp from "shortest-path/shortest_path";
 export const MAX_ROWS = 20;
 export const MAX_COLS = 20;
 
-export type SquareState = "filled" | "clear" | "start" | "end";
-export const swapState = (state: SquareState): number => ({ filled: 0, clear: 1, start: 2, end: 3 }[state]);
+// export type SquareState = "filled" | "clear" | "start" | "end";
+// export const encodeState = (state: SquareState): number => ({ filled: 0, clear: 1, start: 2, end: 3 }[state]);
 
-export type Square = {
-	row: number;
-	col: number;
-	state: SquareState;
-	isPartOfShortestPath: boolean;
+export enum SquareState {
+	Filled = 0,
+	Clear = 1,
+	Start = 2,
+	End = 3
 };
 
-export type Grid = Square[][];
+
+
+export type GridT = Uint8Array;
+
+export const getPseudoRandomIdx = (maxExcl: number): number => Math.round(Math.random() * (maxExcl - 1));
+
+/**
+ * convert from 2D to 1D index 
+ */
+export const to1DIdx = (cols: number) => (i: number, j: number) => i * cols + j;
+
+const initGrid = (rows: number = 10, cols: number = 10): GridT => {
+	const g: GridT = new Uint8Array(rows * cols);
+
+	const idx = to1DIdx(cols);
+
+	for (let i = 0; i < rows; i++) {
+		for (let j = 0; j < cols; j++) {
+			g[idx(i, j)] = SquareState.Filled;
+		}
+	}
+
+	g[idx(getPseudoRandomIdx(rows), 0)] = SquareState.Start;
+	g[idx(getPseudoRandomIdx(rows), cols - 1)] = SquareState.End;
+
+
+	return g;
+};
+
 
 // eslint-disable-next-line @typescript-eslint/camelcase
 let shortestPath: typeof sp.breath_first_search_shortest_path;
@@ -27,93 +55,65 @@ let shortestPath: typeof sp.breath_first_search_shortest_path;
 export const loadShortestPath = async () => {
 	shortestPath = await (await import("../../../node_modules/shortest-path/shortest_path.js"))
 		.breath_first_search_shortest_path;
+
+	(window as any).sp = shortestPath;
 };
 
-const recomputeShortestPath = (grid: Square[], rows: number, cols: number): Grid => {
-	// const squares: Square[] = grid.filter((square) => square.state === "clear");
+const recomputeShortestPath = (grid: GridT, rows: number, cols: number): GridT => {
+	const clearSquareCount: number = grid.filter(sq => sq === SquareState.Clear).length;
 
-	// const clear_sq_rows = squares.map((sq) => sq.row);
-	// const clear_sq_cols = squares.map((sq) => sq.col);
+	if (clearSquareCount < rows - 2) {
+		/**
+		 * impossible
+		 */
 
-	// const preparedGrid = grid.map((sq) => ({ ...sq, state: swapState(sq.state) }));
+		 return new Uint8Array();
+	}
+
 	if (!shortestPath) {
 		throw new Error("not loaded yet");
 	}
 
-	console.log("import", shortestPath);
-	(window as any).sp = shortestPath;
+	const findFirstWithState = (state: SquareState): number  => {
+		for (let i = 0; i < grid.length; i++) {
+			if (grid[i] === state) {
+				return i;
+			}
+		}
 
-	// console.log("grid", grid);
-	const arg1 = (grid.map((sq) => sq.row) as unknown) as Uint32Array;
-	const arg2 = (grid.map((sq) => sq.col) as unknown) as Uint32Array;
-	const arg3 = (grid.map((sq) => swapState(sq.state)) as unknown) as Uint8Array;
-
-	// console.log(arg1, arg2, arg3);
-
-	const stuff = shortestPath(rows, cols, arg1, arg2, arg3);
-
-	let newRows = stuff.slice(0, stuff.length / 2);
-	let newCols = stuff.slice(stuff.length / 2);
-
-	let sp: Square[] = [];
-	for (let i = 0; i < newRows.length; i++) {
-		sp.push({row: newRows[i], col: newCols[i], isPartOfShortestPath: true, state: "clear"});
+		throw new Error("state not found");
 	}
 
-	let updatedGrid: Square[] =  grid.map(sq => {
-		let found = sp.find(pathySq => sq.row === pathySq.row && sq.col === pathySq.col)
-		if (found) {
-			return found
-		}
-		return sq;
-	})
+	const startIdx: number = findFirstWithState(SquareState.Start);
+	const endIdx: number = findFirstWithState(SquareState.End);
 
-	let unflattenedGrid: Grid = [];
+	const indicesOfSquaresBelongingToShortestPath: Uint8Array = shortestPath(grid, rows, cols, startIdx, endIdx);
 
-	for (let i =0; i<rows;i++) {
-		unflattenedGrid.push([])
-		for (let j =0;j<cols;j++) {
-			unflattenedGrid[i].push(updatedGrid[rows * i + j])
-		}
-	}
-
-	return unflattenedGrid;
-	// console.error("stuff", stuff);
-	// return [];
-};
-
-export const getPseudoRandomIdx = (maxExcl: number): number => Math.round(Math.random() * (maxExcl - 1));
-
-const initGrid = (rows: number = 10, cols: number = 10): Square[][] => {
-	const g: Grid = [];
-
-	for (let i = 0; i < rows; i++) {
-		g.push([]);
-
-		for (let j = 0; j < cols; j++) {
-			g[i].push({ row: i, col: j, state: "filled", isPartOfShortestPath: false });
-		}
-	}
-
-	// g[0][getPseudoRandomIdx(cols)].state = "start";
-	// g[rows - 1][getPseudoRandomIdx(cols)].state = "end";
-	g[getPseudoRandomIdx(rows)][0].state = "start";
-	g[getPseudoRandomIdx(rows)][cols - 1].state = "end";
-
-	return g;
+	return indicesOfSquaresBelongingToShortestPath;
 };
 
 interface State {
-	grid: Grid;
+	grid: GridT;
 
 	rows: number;
 	cols: number;
 
 	dirtyRows: number;
 	dirtyCols: number;
+
+	hasShortestPath: boolean;
+	indicesOfShortestPathSquares: Uint8Array;
 }
 
-const getDefaultState = (): State => ({ grid: initGrid(), rows: 10, cols: 10, dirtyRows: 10, dirtyCols: 10 });
+const getDefaultState = (): State => ({ 
+	grid: initGrid(), //
+	rows: 10,
+	cols: 10,
+	dirtyRows: 10,
+	dirtyCols: 10, 
+	hasShortestPath: false,
+	indicesOfShortestPathSquares: new Uint8Array()
+});
 
 export const clamp = (n: number, min: number, max: number): number => Math.max(Math.min(n, max), min);
 
@@ -134,47 +134,53 @@ export const slice = createSlice({
 			state.rows = state.dirtyRows;
 			state.cols = state.dirtyCols;
 			state.grid = initGrid(state.dirtyRows, state.dirtyCols);
+
+			state.hasShortestPath = false;
+			state.indicesOfShortestPathSquares = new Uint8Array();
 		},
 		clickSquare: {
-			reducer: (state, action: PayloadAction<{ square: Square; grid: Grid }>): void => {
-				const { square, grid } = action.payload;
+			reducer: (state, action: PayloadAction<{ squareState: SquareState; grid: GridT,  hasShortestPath: boolean, indicesOfShortestPathSquares: Uint8Array }>): void => {
+				const { grid, squareState, hasShortestPath, indicesOfShortestPathSquares } = action.payload;
 
-				if (["start", "end"].includes(square.state)) {
+				if ([SquareState.Start, SquareState.End].includes(squareState)) {
 					return;
 				}
 
 				state.grid = grid;
+				state.hasShortestPath = hasShortestPath;
+				state.indicesOfShortestPathSquares = indicesOfShortestPathSquares;
 			},
-			prepare: (square: Square, grid: Grid) => {
-				let newGrid: Grid = grid.slice();
+			prepare: (rows: number, cols: number, squareState: SquareState, row: number, col: number, grid: GridT) => {
+				let newGrid: GridT = new Uint8Array(grid);
 
-				const target = newGrid.flat().find((sq) => sq.row === square.row && sq.col === square.col);
-				console.log("target", target)
+				const idx = to1DIdx(cols);
+				const targetIdx = idx(row, col);
 
-				if (!target) {
-					return {
-						payload: {
-							square,
-							grid: newGrid,
-						},
-					};
+				(window as any).grid = newGrid;
+
+				if (!newGrid[targetIdx] && newGrid[targetIdx] !== 0) {
+					throw new Error("target not found when preparing `clickSquare`");
 				}
 
-				if (square.state === "filled") {
-					target.state = "clear";
-				} else if (square.state === "clear") {
-					target.state = "filled";
+				if ([SquareState.Start, SquareState.End].includes(squareState)) {
+					// TODO: SKIP
+				} else if (squareState === SquareState.Filled) {
+					newGrid[targetIdx] = SquareState.Clear;
+				} else if (squareState === SquareState.Clear) {
+					newGrid[targetIdx] = SquareState.Filled;
 				} else {
-					throw new Error("invalid state");
+					let err = new Error(`"invalid state", ${squareState}`);
+					throw err;
 				}
 
-				newGrid = recomputeShortestPath(newGrid.flat(), newGrid.length, newGrid[0].length);
-				console.log("newGrid", newGrid);
+				const indicesOfShortestPathSquares: Uint8Array = recomputeShortestPath(newGrid, rows, cols);
 
 				return {
 					payload: {
-						square,
+						squareState,
 						grid: newGrid,
+						hasShortestPath: indicesOfShortestPathSquares.length > 0,
+						indicesOfShortestPathSquares,
 					},
 				};
 			},

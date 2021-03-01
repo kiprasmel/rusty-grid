@@ -4,7 +4,7 @@ import { css, cx } from "emotion";
 import React, { FC } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../app/store";
-import { clickSquare, commitResize, eventuallySetCols, eventuallySetRows, Square, SquareState } from "./gridSlice";
+import { clickSquare, commitResize, eventuallySetCols, eventuallySetRows, GridT, to1DIdx, SquareState } from "./gridSlice";
 
 export type ButtonProps = {} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
 
@@ -113,13 +113,13 @@ type SquareProps = {
 } & BoxProps;
 
 export const SquareItem: FC<SquareProps> = ({ state, isPartOfShortestPath = false, children, ...rest }) => {
-	const backgroundColor: string = isPartOfShortestPath
+	const backgroundColor: string = isPartOfShortestPath && ![SquareState.Start, SquareState.End].includes(state)
 		? "orange"
 		: {
-				start: "lime",
-				end: "green",
-				filled: "hsl(0, 0%, 90%)",
-				clear: "white",
+				[SquareState.Start]: "lime",
+				[SquareState.End]: "green",
+				[SquareState.Filled]: "hsl(0, 0%, 90%)",
+				[SquareState.Clear]: "white",
 		  }[state] || "hsl(0, 0%, 90%)";
 
 	return (
@@ -137,15 +137,104 @@ export const SquareItem: FC<SquareProps> = ({ state, isPartOfShortestPath = fals
 	);
 };
 
+export interface RowOfSquaresProps { 
+	rows: number;
+	children: (row: number) => React.ReactNode;
+}
+
+export const RowOfSquares: FC<RowOfSquaresProps> = ({rows, children}) => {
+	return <>
+	{
+						new Array(rows).fill(0).map((_, row) => {
+
+							return <ul
+								key={row}
+								className={css`
+									width: 100%;
+
+									display: flex;
+									flex-direction: row;
+
+									list-style-type: none;
+
+									margin: 0;
+									padding: 0;
+
+									justify-content: center;
+									align-items: center;
+								`}
+							>
+										{children(row)}
+							</ul>
+						}
+
+						)
+						
+						
+						}
+						</>
+}
+
+interface SquareItemProps {
+	rows: number;
+	cols: number;
+	row: number;
+	grid: GridT;
+	dispatch: any;
+	indicesOfShortestPathSquares: Uint8Array;
+}
+
+export const Square: FC<SquareItemProps> = ({rows, cols, row, grid, dispatch, indicesOfShortestPathSquares}) => {
+
+	return <>
+	{ new Array(cols).fill(0).map((_, col) => {
+
+										let squareIdx = to1DIdx(cols)(row, col);
+										
+										const squareState = grid[squareIdx];
+
+										return  <li
+										key={`${row}-${col}`}
+										className={css`
+											flex: 1;
+										`}
+									>
+										<button
+											type="button"
+											onClick={() => dispatch(clickSquare(rows, cols, squareState, row, col, grid))}
+											className={css`
+												width: 100%;
+												height: 100%;
+											`}
+										>
+											<SquareItem
+												state={squareState}
+												isPartOfShortestPath={indicesOfShortestPathSquares.includes(squareIdx)}
+											>
+												{/* {square.row}-{square.col} */}
+											</SquareItem>
+										</button>
+									</li>
+										
+									
+									
+									}) }
+							</>	
+}
+
+
+
 export const Grid: FC = () => {
 	const dispatch = useDispatch();
 
-	const grid: Square[][] = useSelector((state: RootState) => state.grid.grid);
+	const grid: GridT = useSelector((state: RootState) => state.grid.grid);
 	const rows: number = useSelector((state: RootState) => state.grid.rows);
 	const cols: number = useSelector((state: RootState) => state.grid.cols);
 
 	const dirtyRows: number = useSelector((state: RootState) => state.grid.dirtyRows);
 	const dirtyCols: number = useSelector((state: RootState) => state.grid.dirtyCols);
+
+	const indicesOfShortestPathSquares: Uint8Array = useSelector((state: RootState) => state.grid.indicesOfShortestPathSquares);
 
 	return (
 		<>
@@ -225,52 +314,15 @@ export const Grid: FC = () => {
 						border: 1px solid hsla(0, 0%, 50%, 0.5);
 					`}
 				>
-					{grid.map((row, rowIdx) => (
-						<>
-							<ul
-								key={rowIdx}
-								className={css`
-									width: 100%;
+								<RowOfSquares rows={rows}>
+									{(row) =>
 
-									display: flex;
-									flex-direction: row;
+									<Square rows={rows} cols={cols} row={row} grid={grid} dispatch={dispatch} indicesOfShortestPathSquares={indicesOfShortestPathSquares} ></Square>
 
-									list-style-type: none;
+									}
+									</RowOfSquares>	
+					
 
-									margin: 0;
-									padding: 0;
-
-									justify-content: center;
-									align-items: center;
-								`}
-							>
-								{row.map((square) => (
-									<li
-										key={`${square.row}-${square.col}`}
-										className={css`
-											flex: 1;
-										`}
-									>
-										<button
-											type="button"
-											onClick={() => dispatch(clickSquare(square, grid))}
-											className={css`
-												width: 100%;
-												height: 100%;
-											`}
-										>
-											<SquareItem
-												state={square.state}
-												isPartOfShortestPath={square.isPartOfShortestPath}
-											>
-												{/* {square.row}-{square.col} */}
-											</SquareItem>
-										</button>
-									</li>
-								))}
-							</ul>
-						</>
-					))}
 				</article>
 				{/* /grid */}
 
@@ -336,7 +388,7 @@ export const Grid: FC = () => {
 							`}
 						>
 							<Label label="Filled (default)">
-								<SquareItem state="filled" />
+								<SquareItem state={SquareState.Filled}/>
 							</Label>
 
 							<Label label="Hover">
@@ -356,7 +408,7 @@ export const Grid: FC = () => {
 							</Label>
 
 							<Label label="Clear">
-								<SquareItem state="clear" />
+								<SquareItem state={SquareState.Clear} />
 							</Label>
 						</Row>
 
@@ -369,15 +421,15 @@ export const Grid: FC = () => {
 							`}
 						>
 							<Label label="Start point">
-								<SquareItem state="start" />
+								<SquareItem state={SquareState.Start} />
 							</Label>
 
 							<Label label="End point">
-								<SquareItem state="end" />
+								<SquareItem state={SquareState.End}/>
 							</Label>
 
 							<Label label="Shortest path">
-								<SquareItem state="clear" isPartOfShortestPath />
+								<SquareItem state={SquareState.Clear} isPartOfShortestPath />
 							</Label>
 						</Row>
 					</div>
