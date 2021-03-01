@@ -22,27 +22,26 @@ fn to_2d_idx(cols: u8, curr_idx: u8) -> (u8, u8) {
 fn get_neighbour(rows: u8, cols: u8, curr: u8, dx: i8, dy: i8) -> Option<u8> {
 	let (row, col) = to_2d_idx(cols, curr);
 
-	let y: u8 = row + dy as u8;
-	let x: u8 = col + dx as u8;
+	let y: i8 = (row as i8).wrapping_add(dy); // row + dy;
+	let x: i8 = (col as i8).wrapping_add(dx);
 
-	if x < 0 || x >= cols || y < 0 || y >= rows {
+	if x < 0 || x >= cols as i8 || y < 0 || y >= rows as i8 {
 		return None;
 	}
 
-	let neighbour: u8 = to_1d_idx(cols, y, x);
+	let neighbour: u8 = to_1d_idx(cols, y as u8, x as u8);
 
 	Some(neighbour)
 }
 
 fn get_neighbours(rows: u8, cols: u8, curr: u8) -> Vec<u8> {
 	let mut neighbours: Vec<u8> = Vec::new();
-	let deltas: Vec<(i8, i8)> = vec![(-1, 0), (1, 0), (0, -1), (0, 1)];
+	// let deltas: Vec<(i8, i8)> = vec![(-1, 0), (1, 0), (0, -1), (0, 1)];
+	let deltas: Vec<(i8, i8)> = vec![(1, 0), (0, 1), (0, -1), (-1, 0)];
 
 	for (dx, dy) in deltas {
 		if let Some(neighbour) = get_neighbour(rows, cols, curr, dx, dy) {
 			neighbours.push(neighbour);
-		} else {
-			continue;
 		}
 	}
 
@@ -63,7 +62,6 @@ pub fn breadth_first_search_shortest_path(
 	rows: u8,
 	cols: u8,
 	start_idx: u8,
-	end_idx: u8,
 ) -> Vec<u8> {
 	let mut done: bool = false;
 
@@ -124,8 +122,6 @@ pub fn breadth_first_search_shortest_path(
 		return vec![];
 	}
 
-	assert_eq!(head, end_idx);
-
 	// retrieve the shortest path from the end to the start
 	let mut shortest_path: Vec<u8> = Vec::new();
 
@@ -143,4 +139,37 @@ pub fn breadth_first_search_shortest_path(
 	shortest_path.reverse();
 
 	shortest_path
+}
+
+#[wasm_bindgen]
+pub fn test(
+	grid: &[u8], //
+	rows: u8,
+	cols: u8,
+	start_idx: u8,
+	end_idx: u8,
+) -> Vec<u8> {
+	let mut a = Vec::new();
+
+	for i in 0..rows {
+		for j in 0..cols {
+			let idx: u8 = to_1d_idx(cols, i, j);
+			a.push(idx);
+		}
+	}
+
+	let mut b = Vec::new();
+	for i in 0..rows * cols {
+		b.push(i);
+	}
+
+	assert_eq!(a, b);
+
+	// let mut parents: Vec<u8> = Vec::new();
+	// parents.resize(grid.len(), 0);
+
+	// parents[0] = 1;
+	// parents[15] = 69;
+
+	a
 }
