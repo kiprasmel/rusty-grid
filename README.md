@@ -1,13 +1,13 @@
 
 <div style="display: flex; justify-content: center; align-items: center; margin: 6rem 0;">
-<a href="http://kiprasmel.github.io/rusty-grid" style="margin: 2rem 2rem;" >
+<a href="http://rusty-grid.kipras.org" style="margin: 2rem 2rem;" >
 <img src="./showcase/showcase.png" />
 </a>
 </div>
 
 # rusty-grid
 
-[kiprasmel.github.io/rusty-grid](http://kiprasmel.github.io/rusty-grid)
+[rusty-grid.kipras.org](http://rusty-grid.kipras.org)
 
 ## Setup
 
