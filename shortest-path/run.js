@@ -3,8 +3,8 @@
 const run = async () => {
 	const sp = await import("./pkg/shortest_path.js");
 
-	const rows = 20;
-	const cols = 20;
+	const rows = 250;
+	const cols = 250;
 
 	const start = 0,
 		end = rows * cols - cols;
@@ -34,12 +34,12 @@ const run = async () => {
 	};
 
 	// console.log("to2Didx", to2DIdx(start), to2DIdx(end));
-	for (let i = 0; i < rows; i++) {
-		for (let j = 0; j < cols; j++) {
-			const idx1d = i * cols + j;
-			console.log(i, j, to2DIdx(idx1d), idx1d);
-		}
-	}
+	// for (let i = 0; i < rows; i++) {
+	// 	for (let j = 0; j < cols; j++) {
+	// 		const idx1d = i * cols + j;
+	// 		console.log(i, j, to2DIdx(idx1d), idx1d);
+	// 	}
+	// }
 
 	// const ret = sp.test(grid, rows, cols, start, end);
 	const ret = sp.breadth_first_search_shortest_path(grid, rows, cols, start);

@@ -7,8 +7,8 @@ import { SquareState } from "./Square";
 
 import { clamp, getPseudoRandomIdx, to1DIdx } from "./utils";
 
-export const MAX_ROWS = 20;
-export const MAX_COLS = 20;
+export const MAX_ROWS = 20; // could be up to ~ 250, but definitely no more than 255 (u16)
+export const MAX_COLS = 20; // could be up to ~ 250, but definitely no more than 255 (u16)
 
 export const MIN_ROWS = 1;
 export const MIN_COLS = 1;
