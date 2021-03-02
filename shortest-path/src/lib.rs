@@ -51,9 +51,26 @@ fn get_neighbour(rows: Idx2D, cols: Idx2D, curr: Idx1D, dx: i16, dy: i16) -> Opt
 	Some(neighbour)
 }
 
-fn get_neighbours(rows: Idx2D, cols: Idx2D, curr: Idx1D) -> Vec<Idx1D> {
+fn get_neighbours(rows: Idx2D, cols: Idx2D, curr: Idx1D, jiggle: bool) -> Vec<Idx1D> {
 	let mut neighbours: Vec<Idx1D> = Vec::new();
-	let deltas: Vec<(i16, i16)> = vec![(1, 0), (0, 1), (0, -1), (-1, 0)];
+
+	let mut deltas: Vec<(i16, i16)> = vec![
+		(-1, 0), /* left */
+		(0, -1), /* top */
+		(0, 1),  /* bottom */
+		(1, 0),  /* right */
+	];
+
+	if jiggle {
+		/*
+		 * swaps the order in which the neighbours are visited,
+		 * thus reversing the *preference* of which *direction*
+		 * the algorithm considers first vs last,
+		 * which in turn, combined with the `frontier` + `next` combo
+		 * to ensure proper "rounds", gives the jiggling effect!
+		 */
+		deltas.reverse();
+	}
 
 	for (dx, dy) in deltas {
 		if let Some(neighbour) = get_neighbour(rows, cols, curr, dx, dy) {
@@ -72,6 +89,13 @@ pub enum SquareState {
 	End = 3,
 }
 
+#[derive(Clone, PartialEq)]
+enum Visited {
+	Not,
+	Waiting,
+	Visited,
+}
+
 #[wasm_bindgen]
 pub fn breadth_first_search_shortest_path(
 	grid: &[State], //
@@ -81,8 +105,8 @@ pub fn breadth_first_search_shortest_path(
 ) -> Vec<Idx1D> {
 	let mut done: bool = false;
 
-	let mut visited: Vec<bool> = Vec::new();
-	visited.resize(grid.len(), false);
+	let mut visited: Vec<Visited> = Vec::new();
+	visited.resize(grid.len(), Visited::Not);
 
 	let mut parents: Vec<Idx1D> = Vec::new();
 	parents.resize(grid.len(), 0);
@@ -90,11 +114,36 @@ pub fn breadth_first_search_shortest_path(
 	let mut tail: Option<Idx1D> = None;
 
 	let mut frontier: VecDeque<Idx1D> = VecDeque::new();
-	frontier.push_back(start_idx);
 
-	while !frontier.is_empty() {
+	let mut next: VecDeque<Idx1D> = VecDeque::new();
+	next.push_back(start_idx);
+
+	/*
+	 * instead of going in straight lines,
+	 * encourages changing up the direction every time
+	 * (as long as it is within the bounds of the shortest path)
+	 *
+	 * the `frontier` & `next` combo, together with
+	 * the differenciation of `visited` as `Waiting` and `Visited`,
+	 * makes this work, * because it lets us
+	 * differenciate between so called "rounds",
+	 * which means that jiggling is as [close to] "perfect"
+	 * as possible, for the whole path!
+	 */
+	let mut jiggle: bool = true;
+
+	while !frontier.is_empty() || !next.is_empty() {
 		if done {
 			break;
+		}
+
+		if frontier.is_empty() {
+			// next round!
+
+			jiggle = !jiggle;
+
+			frontier.append(&mut next);
+			next.clear();
 		}
 
 		let curr: Idx1D;
@@ -105,15 +154,28 @@ pub fn breadth_first_search_shortest_path(
 			break;
 		}
 
-		if visited[curr as usize] {
+		if visited[curr as usize] == Visited::Visited {
 			continue;
 		}
-		visited[curr as usize] = true;
 
-		for neighbour in get_neighbours(rows, cols, curr) {
-			if visited[neighbour as usize] {
+		visited[curr as usize] = Visited::Visited;
+
+		for neighbour in get_neighbours(rows, cols, curr, jiggle) {
+			/*
+			 * Do not consider a neighbour if it is:
+			 * - already visited
+			 * - waiting in the `next` deque for the next round
+			 */
+			if [
+				Visited::Waiting, //
+				Visited::Visited,
+			]
+			.contains(&visited[neighbour as usize])
+			{
 				continue;
 			}
+
+			visited[neighbour as usize] = Visited::Waiting;
 
 			let neighbour_state: State = grid[neighbour as usize];
 
@@ -121,7 +183,7 @@ pub fn breadth_first_search_shortest_path(
 				.contains(&neighbour_state)
 			{
 				parents[neighbour as usize] = curr;
-				frontier.push_back(neighbour);
+				next.push_back(neighbour);
 			}
 
 			if neighbour_state == SquareState::End as State {
