@@ -2,6 +2,7 @@
 	"name": "my-app",
 	"version": "0.1.0",
 	"private": true,
+	"homepage": "rusty-grid",
 	"dependencies": {
 		"@emotion/react": "^11.1.5",
 		"@reduxjs/toolkit": "^1.2.5",

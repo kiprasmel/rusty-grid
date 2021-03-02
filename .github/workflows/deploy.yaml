@@ -1,0 +1,92 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.1
+
+      # - name: install rust & cargo
+      #   run: |
+      #     curl https://sh.rustup.rs -sSf > rust-install.sh
+      #     sh ./rust-install.sh -y
+
+      # https://github.com/Swatinem/rust-cache
+      # selecting a toolchain either by action or manual `rustup` calls should happen
+      # before the plugin, as it uses the current rustc version as its cache key
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.48.0 # stable
+          profile: minimal
+
+      - uses: Swatinem/rust-cache@v1
+        id: cache-wasm-pack
+        with:
+          # key: ${{ runner.os }}-wasm-pack-${{ hashFiles('./shortest-path/Cargo.lock') }}
+          working-directory: shortest-path
+          
+      # - name: cache wasm-pack & compilation of modules
+      #   id: cache-wasm-pack
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: |
+      #       ~/.cargo/registry
+      #       ~/.cargo/git
+      #       ./shortest-path/target
+      #     key: ${{ runner.os }}-wasm-pack-${{ hashFiles('./shortestpath/Cargo.lock') }}
+
+      - run: cargo install wasm-pack --locked
+        if: steps.cache-wasm-pack.outputs.cache-hit != 'true'
+
+      - run: |
+          cd shortest-path/
+          wasm-pack build
+          ls -la ./pkg/
+          ls -la ./target/
+
+      # # https://github.com/actions/cache/blob/main/examples.md#node---yarn
+      # - name: Get yarn cache directory path
+      #   id: yarn-cache-dir-path
+      #   run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      # - uses: actions/cache@v2
+      #   id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+      #   with:
+      #     path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+      #     key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-yarn-
+
+      - run: yarn install --frozen-lockfile --check-files
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        env:
+          CI: false # install dev dependencies too
+
+      - name: link package
+        run: |
+          cd shortest-path/pkg/
+          ls -la
+          yarn link
+          cd ../../
+          yarn link shortest-path
+
+      - run: yarn build
+        env:
+          CI: false # do **not** treat warnings as errors m8
+
+      # - name: create sandbox folder
+      #   run: |
+      #       mkdir -p ./sandbox/
+      #       mv build ./sandbox/
+      #       mv node_modules ./sandbox/
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@4.0.0
+        with:
+          branch: gh-pages # The branch the action should deploy to.
+          folder: build # The folder the action should deploy.
