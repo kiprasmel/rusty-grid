@@ -16,14 +16,14 @@ export const MIN_COLS = 1;
 export type GridT = Uint8Array;
 export type IndicesOfShortestPathT = Uint16Array;
 
-const initGrid = (rows: number = 10, cols: number = 10): GridT => {
+const initGrid = (rows: number = 10, cols: number = 10, isInverted: boolean = false): GridT => {
 	const grid: GridT = new Uint8Array(rows * cols);
 
 	const idx = to1DIdx(cols);
 
 	for (let i = 0; i < rows; i++) {
 		for (let j = 0; j < cols; j++) {
-			grid[idx(i, j)] = SquareState.Filled;
+			grid[idx(i, j)] = isInverted ? SquareState.Clear : SquareState.Filled;
 		}
 	}
 
@@ -44,6 +44,8 @@ interface State {
 
 	hasShortestPath: boolean;
 	indicesOfShortestPathSquares: IndicesOfShortestPathT;
+
+	isInverted: boolean;
 }
 
 const getDefaultState = (): State => ({
@@ -54,6 +56,7 @@ const getDefaultState = (): State => ({
 	dirtyCols: 10,
 	hasShortestPath: false,
 	indicesOfShortestPathSquares: new Uint16Array(),
+	isInverted: false,
 });
 
 const initialState: State = getDefaultState();
@@ -72,10 +75,11 @@ export const slice = createSlice({
 		commitResize: (state): void => {
 			state.rows = state.dirtyRows;
 			state.cols = state.dirtyCols;
-			state.grid = initGrid(state.dirtyRows, state.dirtyCols);
+			const newGrid: GridT = initGrid(state.dirtyRows, state.dirtyCols, state.isInverted);
+			state.grid = newGrid;
 
 			state.hasShortestPath = false;
-			state.indicesOfShortestPathSquares = new Uint16Array();
+			state.indicesOfShortestPathSquares = computeShortestPath(newGrid, state.dirtyRows, state.dirtyCols);
 		},
 		invert: {
 			reducer: (
@@ -86,6 +90,7 @@ export const slice = createSlice({
 					hasShortestPath: boolean;
 				}>
 			): void => {
+				state.isInverted = !state.isInverted;
 				state.grid = action.payload.grid;
 				state.indicesOfShortestPathSquares = action.payload.indicesOfShortestPathSquares;
 				state.hasShortestPath = action.payload.hasShortestPath;
