@@ -27,18 +27,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
         id: cache-wasm-pack
         with:
-          # key: ${{ runner.os }}-wasm-pack-${{ hashFiles('./shortest-path/Cargo.lock') }}
           working-directory: shortest-path
-          
-      # - name: cache wasm-pack & compilation of modules
-      #   id: cache-wasm-pack
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: |
-      #       ~/.cargo/registry
-      #       ~/.cargo/git
-      #       ./shortest-path/target
-      #     key: ${{ runner.os }}-wasm-pack-${{ hashFiles('./shortestpath/Cargo.lock') }}
 
       - run: cargo install wasm-pack --locked
         if: steps.cache-wasm-pack.outputs.cache-hit != 'true'
@@ -46,14 +35,13 @@ jobs:
       - run: |
           cd shortest-path/
           wasm-pack build
-          ls -la ./pkg/
-          ls -la ./target/
 
-      # # https://github.com/actions/cache/blob/main/examples.md#node---yarn
-      # - name: Get yarn cache directory path
-      #   id: yarn-cache-dir-path
-      #   run: echo "::set-output name=dir::$(yarn cache dir)"
+      # https://github.com/actions/cache/blob/main/examples.md#node---yarn
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
 
+      # disable because dev deependencies still won't be installed
       # - uses: actions/cache@v2
       #   id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
       #   with:
@@ -70,7 +58,6 @@ jobs:
       - name: link package
         run: |
           cd shortest-path/pkg/
-          ls -la
           yarn link
           cd ../../
           yarn link shortest-path
@@ -78,12 +65,6 @@ jobs:
       - run: yarn build
         env:
           CI: false # do **not** treat warnings as errors m8
-
-      # - name: create sandbox folder
-      #   run: |
-      #       mkdir -p ./sandbox/
-      #       mv build ./sandbox/
-      #       mv node_modules ./sandbox/
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.0.0
