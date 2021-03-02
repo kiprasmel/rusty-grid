@@ -1,23 +1,23 @@
 {
   "files": {
     "main.css": "/rusty-grid/static/css/main.e70ed13f.chunk.css",
-    "main.js": "/rusty-grid/static/js/main.b27cff13.chunk.js",
-    "main.js.map": "/rusty-grid/static/js/main.b27cff13.chunk.js.map",
-    "runtime-main.js": "/rusty-grid/static/js/runtime-main.a9f3bb8d.js",
-    "runtime-main.js.map": "/rusty-grid/static/js/runtime-main.a9f3bb8d.js.map",
+    "main.js": "/rusty-grid/static/js/main.d6750f1f.chunk.js",
+    "main.js.map": "/rusty-grid/static/js/main.d6750f1f.chunk.js.map",
+    "runtime-main.js": "/rusty-grid/static/js/runtime-main.33f2c3be.js",
+    "runtime-main.js.map": "/rusty-grid/static/js/runtime-main.33f2c3be.js.map",
     "static/js/2.ff49ec70.chunk.js": "/rusty-grid/static/js/2.ff49ec70.chunk.js",
     "static/js/2.ff49ec70.chunk.js.map": "/rusty-grid/static/js/2.ff49ec70.chunk.js.map",
-    "static/js/3.3fac5b38.chunk.js": "/rusty-grid/static/js/3.3fac5b38.chunk.js",
-    "442d83b5d67a09b74fb5.module.wasm": "/rusty-grid/442d83b5d67a09b74fb5.module.wasm",
-    "static/js/3.3fac5b38.chunk.js.map": "/rusty-grid/static/js/3.3fac5b38.chunk.js.map",
+    "static/js/3.0f0afdce.chunk.js": "/rusty-grid/static/js/3.0f0afdce.chunk.js",
+    "afaebedf0e6a4bdc452a.module.wasm": "/rusty-grid/afaebedf0e6a4bdc452a.module.wasm",
+    "static/js/3.0f0afdce.chunk.js.map": "/rusty-grid/static/js/3.0f0afdce.chunk.js.map",
     "index.html": "/rusty-grid/index.html",
     "static/css/main.e70ed13f.chunk.css.map": "/rusty-grid/static/css/main.e70ed13f.chunk.css.map",
     "static/js/2.ff49ec70.chunk.js.LICENSE.txt": "/rusty-grid/static/js/2.ff49ec70.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.a9f3bb8d.js",
+    "static/js/runtime-main.33f2c3be.js",
     "static/js/2.ff49ec70.chunk.js",
     "static/css/main.e70ed13f.chunk.css",
-    "static/js/main.b27cff13.chunk.js"
+    "static/js/main.d6750f1f.chunk.js"
   ]
 }
