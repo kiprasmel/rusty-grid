@@ -46,6 +46,7 @@ interface State {
 	indicesOfShortestPathSquares: IndicesOfShortestPathT;
 
 	isInverted: boolean;
+	hideUIStates: boolean;
 }
 
 const getDefaultState = (): State => ({
@@ -57,6 +58,7 @@ const getDefaultState = (): State => ({
 	hasShortestPath: false,
 	indicesOfShortestPathSquares: new Uint16Array(),
 	isInverted: false,
+	hideUIStates: false,
 });
 
 const initialState: State = getDefaultState();
@@ -80,6 +82,9 @@ export const slice = createSlice({
 
 			state.hasShortestPath = false;
 			state.indicesOfShortestPathSquares = computeShortestPath(newGrid, state.dirtyRows, state.dirtyCols);
+		},
+		toggleUIStates: (state): void => {
+			state.hideUIStates = !state.hideUIStates;
 		},
 		invert: {
 			reducer: (
@@ -179,6 +184,14 @@ export const slice = createSlice({
 	},
 });
 
-export const { reset, eventuallySetRows, eventuallySetCols, commitResize, invert, clickSquare } = slice.actions;
+export const {
+	reset, //
+	eventuallySetRows,
+	eventuallySetCols,
+	commitResize,
+	invert,
+	toggleUIStates,
+	clickSquare,
+} = slice.actions;
 
 export default slice.reducer;
