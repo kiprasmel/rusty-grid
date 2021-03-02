@@ -28,15 +28,17 @@ export const SquareItem: FC<SquareItemProps> = ({
 	children,
 	...rest
 }) => {
+	const defaultColor: string = "hsl(0, 0%, 90%)";
+
 	const backgroundColor: string =
 		isPartOfShortestPath && ![SquareState.Start, SquareState.End].includes(state)
-			? "orange"
+			? "hsl(130, 100%, 87%)"
 			: {
-					[SquareState.Start]: "lime", // eslint-disable-line indent
-					[SquareState.End]: "green", // eslint-disable-line indent
-					[SquareState.Filled]: "hsla(0, 0%, 90%, 1)", // eslint-disable-line indent
+					[SquareState.Start]: "hsl(-60,100%,90%)", // eslint-disable-line indent
+					[SquareState.End]: "hsl(170, 100%,85%)", // eslint-disable-line indent
+					[SquareState.Filled]: defaultColor, // eslint-disable-line indent
 					[SquareState.Clear]: "white", // eslint-disable-line indent
-			  }[state] || "hsla(0, 0%, 90%, 1)";
+			  }[state];
 
 	return (
 		<button
