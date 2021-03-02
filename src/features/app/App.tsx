@@ -35,6 +35,8 @@ export default function App(): JSX.Element {
 					& > * {
 						margin-top: 4rem;
 					}
+
+					margin-bottom: 4rem;
 				`}
 			>
 				<Logo />
