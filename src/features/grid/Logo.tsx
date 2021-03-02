@@ -1,4 +1,5 @@
 import { css } from "emotion";
+import { homepageUrl } from "../../config";
 
 export const Logo = () => (
 	<article
@@ -6,6 +7,6 @@ export const Logo = () => (
 			text-align: left;
 		`}
 	>
-		<img src="/assets/grid-logo.png" alt="Grid logo" />
+		<img src={`${homepageUrl}assets/grid-logo.png`} alt="Grid logo" />
 	</article>
 );
