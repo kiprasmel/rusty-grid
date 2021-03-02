@@ -12,7 +12,7 @@ export const store = configureStore({
 		 * allow using `Uint8Array`s
 		 */
 		serializableCheck: {
-			ignoredActions: ["grid/clickSquare"],
+			ignoredActions: ["grid/clickSquare", "grid/invert"],
 			ignoredPaths: ["grid.grid", "grid.indicesOfShortestPathSquares"],
 		},
 	}),

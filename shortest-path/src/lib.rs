@@ -1,43 +1,45 @@
 use std::collections::VecDeque;
 use wasm_bindgen::prelude::*;
 
+type Idx = u16;
+type State = u8;
+
 // convert from 2D index to 1D index
-fn to_1d_idx(cols: u8, row: u8, col: u8) -> u8 {
-	row * cols + col
+fn to_1d_idx(cols: u16, row: u16, col: u16) -> u16 {
+	(row * cols + col).into()
 }
 
 // convert from 1D index to 2D index
-fn to_2d_idx(cols: u8, curr_idx: u8) -> (u8, u8) {
-	let mut row: u8 = 0;
+fn to_2d_idx(cols: u16, curr_idx: u16) -> (u16, u16) {
+	let mut row: u16 = 0;
 
 	while (row + 1) * cols <= curr_idx {
-		row += 1;
+		row = row + 1;
 	}
 
-	let col: u8 = curr_idx - (row * cols);
+	let col: u16 = curr_idx - (row * cols);
 
 	(row, col)
 }
 
-fn get_neighbour(rows: u8, cols: u8, curr: u8, dx: i8, dy: i8) -> Option<u8> {
+fn get_neighbour(rows: u16, cols: u16, curr: u16, dx: i16, dy: i16) -> Option<u16> {
 	let (row, col) = to_2d_idx(cols, curr);
 
-	let y: i8 = (row as i8).wrapping_add(dy); // row + dy;
-	let x: i8 = (col as i8).wrapping_add(dx);
+	let y: i16 = (row as i16).wrapping_add(dy);
+	let x: i16 = (col as i16).wrapping_add(dx);
 
-	if x < 0 || x >= cols as i8 || y < 0 || y >= rows as i8 {
+	if x < 0 || x >= cols as i16 || y < 0 || y >= rows as i16 {
 		return None;
 	}
 
-	let neighbour: u8 = to_1d_idx(cols, y as u8, x as u8);
+	let neighbour: u16 = to_1d_idx(cols, y as u16, x as u16);
 
 	Some(neighbour)
 }
 
-fn get_neighbours(rows: u8, cols: u8, curr: u8) -> Vec<u8> {
-	let mut neighbours: Vec<u8> = Vec::new();
-	// let deltas: Vec<(i8, i8)> = vec![(-1, 0), (1, 0), (0, -1), (0, 1)];
-	let deltas: Vec<(i8, i8)> = vec![(1, 0), (0, 1), (0, -1), (-1, 0)];
+fn get_neighbours(rows: u16, cols: u16, curr: u16) -> Vec<u16> {
+	let mut neighbours: Vec<u16> = Vec::new();
+	let deltas: Vec<(i16, i16)> = vec![(1, 0), (0, 1), (0, -1), (-1, 0)];
 
 	for (dx, dy) in deltas {
 		if let Some(neighbour) = get_neighbour(rows, cols, curr, dx, dy) {
@@ -58,22 +60,22 @@ pub enum SquareState {
 
 #[wasm_bindgen]
 pub fn breadth_first_search_shortest_path(
-	grid: &[u8], //
-	rows: u8,
-	cols: u8,
-	start_idx: u8,
-) -> Vec<u8> {
+	grid: &[State], //
+	rows: u16,
+	cols: u16,
+	start_idx: u16,
+) -> Vec<Idx> {
 	let mut done: bool = false;
 
 	let mut visited: Vec<bool> = Vec::new();
 	visited.resize(grid.len(), false);
 
-	let mut parents: Vec<u8> = Vec::new();
+	let mut parents: Vec<u16> = Vec::new();
 	parents.resize(grid.len(), 0);
 
-	let mut tail: Option<u8> = None;
+	let mut tail: Option<u16> = None;
 
-	let mut frontier: VecDeque<u8> = VecDeque::new();
+	let mut frontier: VecDeque<u16> = VecDeque::new();
 	frontier.push_back(start_idx);
 
 	while !frontier.is_empty() {
@@ -81,7 +83,7 @@ pub fn breadth_first_search_shortest_path(
 			break;
 		}
 
-		let curr: u8;
+		let curr: u16;
 
 		if let Some(new_curr) = frontier.pop_front() {
 			curr = new_curr;
@@ -114,7 +116,7 @@ pub fn breadth_first_search_shortest_path(
 		} // for
 	} // while
 
-	let mut head: u8;
+	let mut head: u16;
 
 	if let Some(_head) = tail {
 		head = _head;
@@ -123,7 +125,7 @@ pub fn breadth_first_search_shortest_path(
 	}
 
 	// retrieve the shortest path from the end to the start
-	let mut shortest_path: Vec<u8> = Vec::new();
+	let mut shortest_path: Vec<u16> = Vec::new();
 
 	loop {
 		shortest_path.push(head);
@@ -144,16 +146,15 @@ pub fn breadth_first_search_shortest_path(
 #[wasm_bindgen]
 pub fn test(
 	grid: &[u8], //
-	rows: u8,
-	cols: u8,
-	start_idx: u8,
-	end_idx: u8,
-) -> Vec<u8> {
+	rows: u16,
+	cols: u16,
+	start_idx: u16,
+) -> Vec<u16> {
 	let mut a = Vec::new();
 
 	for i in 0..rows {
 		for j in 0..cols {
-			let idx: u8 = to_1d_idx(cols, i, j);
+			let idx: u16 = to_1d_idx(cols, i, j);
 			a.push(idx);
 		}
 	}

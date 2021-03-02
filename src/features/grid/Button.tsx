@@ -9,13 +9,25 @@ export const Button: FC<ButtonProps> = ({ children, ...rest }) => (
 		{...rest}
 		className={cx(
 			css`
-				font-size: 1.5em;
-				padding: 0.4em 1em;
+				/* font-size: 1.5rem; */
+				font-size: 1.75rem;
+				/* padding: 0.4rem 1rem; */
+				padding: 0.6rem 1.5rem;
 
+				letter-spacing: -0.02em;
 				border-radius: 8px;
 
 				background-color: hsl(220, 100%, 60%);
 				color: white;
+
+				&:hover {
+					background-color: hsl(220, 100%, 75%);
+					transition: background-color 0.2s ease-in-out;
+				}
+
+				&:focus {
+					background-color: hsl(220, 100%, 35%);
+				}
 			`,
 			rest.className
 		)}

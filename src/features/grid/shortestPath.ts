@@ -3,7 +3,7 @@ import * as sp from "../../../node_modules/shortest-path/shortest_path";
 // import { SquareState } from "../../../node_modules/shortest-path/shortest_path";
 
 // eslint-disable-next-line import/no-cycle
-import { GridT } from "./gridSlice";
+import { GridT, IndicesOfShortestPathT } from "./gridSlice";
 // eslint-disable-next-line import/no-cycle
 import { SquareState } from "./Square";
 
@@ -26,15 +26,16 @@ export const loadShortestPathWasm = async (): Promise<void> => {
 	(window as any).sp = computeShortestPathWasm;
 };
 
-export const computeShortestPath = (grid: GridT, rows: number, cols: number): GridT => {
+export const computeShortestPath = (grid: GridT, rows: number, cols: number): IndicesOfShortestPathT => {
 	const clearSquareCount: number = grid.filter((sq) => sq === SquareState.Clear).length;
 
-	if (clearSquareCount < rows - 2) {
+	if (clearSquareCount < Math.min(rows, cols) - 2) {
 		/**
 		 * impossible to have any path that connects start & end
 		 */
+		console.log("skipping computation because impossible");
 
-		return new Uint8Array();
+		return new Uint16Array();
 	}
 
 	if (!hasLoadedShortestPathWasm) {
@@ -52,14 +53,12 @@ export const computeShortestPath = (grid: GridT, rows: number, cols: number): Gr
 	};
 
 	const startIdx: number = findIdxOfFirstWithState(SquareState.Start);
-	const endIdx: number = findIdxOfFirstWithState(SquareState.End);
 
-	const indicesOfSquaresBelongingToShortestPath: Uint8Array = computeShortestPathWasm(
+	const indicesOfSquaresBelongingToShortestPath: IndicesOfShortestPathT = computeShortestPathWasm(
 		grid,
 		rows,
 		cols,
-		startIdx,
-		endIdx
+		startIdx
 	);
 
 	return indicesOfSquaresBelongingToShortestPath;

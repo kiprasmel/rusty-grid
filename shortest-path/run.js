@@ -3,8 +3,8 @@
 const run = async () => {
 	const sp = await import("./pkg/shortest_path.js");
 
-	const rows = 17;
-	const cols = 17;
+	const rows = 20;
+	const cols = 20;
 
 	const start = 0,
 		end = rows * cols - cols;

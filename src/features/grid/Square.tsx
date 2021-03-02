@@ -2,8 +2,8 @@ import { FC } from "react";
 import { css, cx } from "emotion";
 import { useDispatch } from "react-redux";
 
-import { clickSquare, GridT } from "./gridSlice";
-import { Box, BoxProps } from "./Box";
+// eslint-disable-next-line import/no-cycle
+import { clickSquare, GridT, IndicesOfShortestPathT } from "./gridSlice";
 import { to1DIdx } from "./utils";
 
 export enum SquareState {
@@ -16,31 +16,70 @@ export enum SquareState {
 export type SquareItemProps = {
 	state: SquareState;
 	isPartOfShortestPath?: boolean;
-} & BoxProps;
+	handleClick?: () => any;
+} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
 
-export const SquareItem: FC<SquareItemProps> = ({ state, isPartOfShortestPath = false, children, ...rest }) => {
+export const SquareItem: FC<SquareItemProps> = ({
+	state,
+	isPartOfShortestPath = false,
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	handleClick = (): void => {},
+	className,
+	children,
+	...rest
+}) => {
 	const backgroundColor: string =
 		isPartOfShortestPath && ![SquareState.Start, SquareState.End].includes(state)
 			? "orange"
 			: {
 					[SquareState.Start]: "lime", // eslint-disable-line indent
 					[SquareState.End]: "green", // eslint-disable-line indent
-					[SquareState.Filled]: "hsl(0, 0%, 90%)", // eslint-disable-line indent
+					[SquareState.Filled]: "hsla(0, 0%, 90%, 1)", // eslint-disable-line indent
 					[SquareState.Clear]: "white", // eslint-disable-line indent
-			  }[state] || "hsl(0, 0%, 90%)";
+			  }[state] || "hsla(0, 0%, 90%, 1)";
 
 	return (
-		<Box
+		<button
+			type="button"
 			{...rest}
+			onClick={handleClick}
 			className={cx(
 				css`
+					display: flex;
+
+					justify-content: center;
+					align-items: center;
+
+					min-width: 70px;
+					min-height: 70px;
+
+					/* width: 100%;
+					height: 100%; */
+
+					margin: 0;
+					padding: 0;
+
 					background-color: ${backgroundColor};
+
+					border: 1px solid hsla(0, 0%, 50%, 0.5);
+
+					&:hover {
+						background: ${isPartOfShortestPath ||
+						[SquareState.Start, SquareState.End, SquareState.Filled].includes(state) // eslint-disable-next-line indent
+							? backgroundColor // eslint-disable-next-line indent
+							: // eslint-disable-next-line indent
+							  "hsla(0, 0%, 95%, 0.95)"};
+					}
+
+					&:active {
+						background: hsla(0, 0%, 50%, 0.5);
+					}
 				`,
-				rest.className
+				className
 			)}
 		>
 			{children}
-		</Box>
+		</button>
 	);
 };
 
@@ -55,8 +94,6 @@ export const RowOfSquares: FC<RowOfSquaresProps> = ({ rows, children }) => (
 			<ul
 				key={row}
 				className={css`
-					width: 100%;
-
 					display: flex;
 					flex-direction: row;
 
@@ -75,15 +112,15 @@ export const RowOfSquares: FC<RowOfSquaresProps> = ({ rows, children }) => (
 	</>
 );
 
-interface SquareProps {
+interface ColumnOfSquaresProps {
 	rows: number;
 	cols: number;
 	row: number;
 	grid: GridT;
-	indicesOfShortestPathSquares: Uint8Array;
+	indicesOfShortestPathSquares: IndicesOfShortestPathT;
 }
 
-export const Square: FC<SquareProps> = ({ rows, cols, row, grid, indicesOfShortestPathSquares }) => {
+export const ColumnOfSquares: FC<ColumnOfSquaresProps> = ({ rows, cols, row, grid, indicesOfShortestPathSquares }) => {
 	const dispatch = useDispatch();
 
 	return (
@@ -94,25 +131,12 @@ export const Square: FC<SquareProps> = ({ rows, cols, row, grid, indicesOfShorte
 				const squareState = grid[squareIdx];
 
 				return (
-					<li
-						key={`${row}-${col}`}
-						className={css`
-							flex: 1;
-						`}
-					>
-						<button
-							type="button"
-							onClick={() => dispatch(clickSquare(rows, cols, squareState, row, col, grid))}
-							className={css`
-								width: 100%;
-								height: 100%;
-							`}
-						>
-							<SquareItem
-								state={squareState}
-								isPartOfShortestPath={indicesOfShortestPathSquares.includes(squareIdx)}
-							/>
-						</button>
+					<li key={`${row}-${col}`}>
+						<SquareItem
+							state={squareState}
+							isPartOfShortestPath={indicesOfShortestPathSquares.includes(squareIdx)}
+							handleClick={(): any => dispatch(clickSquare(rows, cols, squareState, row, col, grid))}
+						/>
 					</li>
 				);
 			})}

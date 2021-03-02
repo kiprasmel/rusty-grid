@@ -10,7 +10,11 @@ import { clamp, getPseudoRandomIdx, to1DIdx } from "./utils";
 export const MAX_ROWS = 20;
 export const MAX_COLS = 20;
 
+export const MIN_ROWS = 1;
+export const MIN_COLS = 1;
+
 export type GridT = Uint8Array;
+export type IndicesOfShortestPathT = Uint16Array;
 
 const initGrid = (rows: number = 10, cols: number = 10): GridT => {
 	const grid: GridT = new Uint8Array(rows * cols);
@@ -39,7 +43,7 @@ interface State {
 	dirtyCols: number;
 
 	hasShortestPath: boolean;
-	indicesOfShortestPathSquares: Uint8Array;
+	indicesOfShortestPathSquares: IndicesOfShortestPathT;
 }
 
 const getDefaultState = (): State => ({
@@ -49,7 +53,7 @@ const getDefaultState = (): State => ({
 	dirtyRows: 10,
 	dirtyCols: 10,
 	hasShortestPath: false,
-	indicesOfShortestPathSquares: new Uint8Array(),
+	indicesOfShortestPathSquares: new Uint16Array(),
 });
 
 const initialState: State = getDefaultState();
@@ -60,10 +64,10 @@ export const slice = createSlice({
 	reducers: {
 		reset: (): State => getDefaultState(),
 		eventuallySetRows: (state, action: PayloadAction<number>): void => {
-			state.dirtyRows = clamp(action.payload, 1, MAX_ROWS);
+			state.dirtyRows = clamp(action.payload, MIN_ROWS, MAX_ROWS);
 		},
 		eventuallySetCols: (state, action): void => {
-			state.dirtyCols = clamp(action.payload, 1, MAX_COLS);
+			state.dirtyCols = clamp(action.payload, MIN_COLS, MAX_COLS);
 		},
 		commitResize: (state): void => {
 			state.rows = state.dirtyRows;
@@ -71,7 +75,44 @@ export const slice = createSlice({
 			state.grid = initGrid(state.dirtyRows, state.dirtyCols);
 
 			state.hasShortestPath = false;
-			state.indicesOfShortestPathSquares = new Uint8Array();
+			state.indicesOfShortestPathSquares = new Uint16Array();
+		},
+		invert: {
+			reducer: (
+				state,
+				action: PayloadAction<{
+					grid: GridT;
+					indicesOfShortestPathSquares: Uint16Array;
+					hasShortestPath: boolean;
+				}>
+			): void => {
+				state.grid = action.payload.grid;
+				state.indicesOfShortestPathSquares = action.payload.indicesOfShortestPathSquares;
+				state.hasShortestPath = action.payload.hasShortestPath;
+			},
+			prepare: (grid: GridT, rows: number, cols: number) => {
+				const newGrid: GridT = grid.map(
+					(sq) =>
+						sq === SquareState.Filled
+							? SquareState.Clear
+							: sq === SquareState.Clear
+							? // eslint-disable-line indent
+							  SquareState.Filled // eslint-disable-line indent
+							: sq // eslint-disable-line indent
+				);
+
+				const indicesOfShortestPathSquares: Uint16Array = computeShortestPath(newGrid, rows, cols);
+
+				(window as any).grid = Array.from(newGrid);
+
+				return {
+					payload: {
+						grid: newGrid,
+						indicesOfShortestPathSquares,
+						hasShortestPath: indicesOfShortestPathSquares.length > 0,
+					},
+				};
+			},
 		},
 		clickSquare: {
 			reducer: (
@@ -80,7 +121,7 @@ export const slice = createSlice({
 					squareState: SquareState;
 					grid: GridT;
 					hasShortestPath: boolean;
-					indicesOfShortestPathSquares: Uint8Array;
+					indicesOfShortestPathSquares: Uint16Array;
 				}>
 			): void => {
 				const { grid, squareState, hasShortestPath, indicesOfShortestPathSquares } = action.payload;
@@ -116,7 +157,9 @@ export const slice = createSlice({
 					throw err;
 				}
 
-				const indicesOfShortestPathSquares: Uint8Array = computeShortestPath(newGrid, rows, cols);
+				const indicesOfShortestPathSquares: IndicesOfShortestPathT = computeShortestPath(newGrid, rows, cols);
+
+				console.log("indicesOfShortestPathSquares", indicesOfShortestPathSquares);
 
 				return {
 					payload: {
@@ -131,6 +174,6 @@ export const slice = createSlice({
 	},
 });
 
-export const { reset, eventuallySetRows, eventuallySetCols, commitResize, clickSquare } = slice.actions;
+export const { reset, eventuallySetRows, eventuallySetCols, commitResize, invert, clickSquare } = slice.actions;
 
 export default slice.reducer;

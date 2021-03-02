@@ -10,7 +10,7 @@ export const Label: FC<{ label: string }> = ({ label, children }) => (
 			align-items: flex-start;
 
 			& > * + * {
-				margin-top: 0.25em;
+				margin-top: 0.25rem;
 			}
 		`}
 	>
@@ -19,7 +19,9 @@ export const Label: FC<{ label: string }> = ({ label, children }) => (
 				margin: 0;
 				padding: 0;
 
-				font-size: 1.5em;
+				font-size: 1.5rem;
+
+				word-wrap: normal;
 			`}
 		>
 			{label}
