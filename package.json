@@ -32,7 +32,9 @@
 	"eslintConfig": {
 		"extends": "eslint-config-sarpik",
 		"rules": {
-			"no-nested-ternary": 0
+			"no-nested-ternary": 0,
+			"@typescript-eslint/no-empty-function": 1,
+			"no-else-return": 1
 		}
 	},
 	"browserslist": {
