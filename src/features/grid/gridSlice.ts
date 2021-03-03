@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 // eslint-disable-next-line import/no-cycle
 import { computeShortestPath } from "./shortestPath";
 // eslint-disable-next-line import/no-cycle
-import { SquareState } from "./Square";
+import { SquareState, swapSquareState, swapSquareStateInGrid } from "./Square";
 
 import { clamp, getPseudoRandomIdx, to1DIdx } from "./utils";
 
@@ -101,19 +101,8 @@ export const slice = createSlice({
 				state.hasShortestPath = action.payload.hasShortestPath;
 			},
 			prepare: (grid: GridT, rows: number, cols: number) => {
-				const newGrid: GridT = grid.map(
-					(sq) =>
-						sq === SquareState.Filled
-							? SquareState.Clear
-							: sq === SquareState.Clear
-							? // eslint-disable-line indent
-							  SquareState.Filled // eslint-disable-line indent
-							: sq // eslint-disable-line indent
-				);
-
+				const newGrid: GridT = grid.map(swapSquareState);
 				const indicesOfShortestPathSquares: Uint16Array = computeShortestPath(newGrid, rows, cols);
-
-				(window as any).grid = Array.from(newGrid);
 
 				return {
 					payload: {
@@ -144,32 +133,9 @@ export const slice = createSlice({
 				state.hasShortestPath = hasShortestPath;
 				state.indicesOfShortestPathSquares = indicesOfShortestPathSquares;
 			},
-			prepare: (rows: number, cols: number, squareState: SquareState, row: number, col: number, grid: GridT) => {
-				const newGrid: GridT = new Uint8Array(grid);
-
-				const idx = to1DIdx(cols);
-				const targetIdx = idx(row, col);
-
-				(window as any).grid = newGrid;
-
-				if (!newGrid[targetIdx] && newGrid[targetIdx] !== 0) {
-					throw new Error("target not found when preparing `clickSquare`");
-				}
-
-				if ([SquareState.Start, SquareState.End].includes(squareState)) {
-					// TODO: SKIP
-				} else if (squareState === SquareState.Filled) {
-					newGrid[targetIdx] = SquareState.Clear;
-				} else if (squareState === SquareState.Clear) {
-					newGrid[targetIdx] = SquareState.Filled;
-				} else {
-					const err = new Error(`"invalid state", ${squareState}`);
-					throw err;
-				}
-
+			prepare: (grid: GridT, rows: number, cols: number, squareIdx: number, squareState: SquareState) => {
+				const newGrid: GridT = swapSquareStateInGrid(grid, squareIdx, squareState);
 				const indicesOfShortestPathSquares: IndicesOfShortestPathT = computeShortestPath(newGrid, rows, cols);
-
-				console.log("indicesOfShortestPathSquares", indicesOfShortestPathSquares);
 
 				return {
 					payload: {

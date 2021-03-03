@@ -13,6 +13,35 @@ export enum SquareState {
 	End = 3,
 }
 
+export const swapSquareState = (state: SquareState): SquareState => {
+	const newState = {
+		[SquareState.Filled]: SquareState.Clear,
+		[SquareState.Clear]: SquareState.Filled,
+		[SquareState.Start]: SquareState.Start, // no swap
+		[SquareState.End]: SquareState.End, // no swap
+	}[state];
+
+	if (!newState && newState !== 0) {
+		throw new Error(`invalid squareState provided to \`swapSquareState\` function (${state})`);
+	}
+
+	return newState;
+};
+
+export const swapSquareStateInGrid = (grid: GridT, squareIdx: number, squareState: SquareState): GridT => {
+	if (!grid[squareIdx] && grid[squareIdx] !== 0) {
+		throw new Error("target not found when preparing `clickSquare`");
+	}
+
+	const newGrid: GridT = new Uint8Array(grid);
+	const newState: SquareState = swapSquareState(squareState);
+	newGrid[squareIdx] = newState;
+
+	console.log("state", squareState, "newState", newState);
+
+	return newGrid;
+};
+
 export type SquareItemProps = {
 	state: SquareState;
 	isPartOfShortestPath?: boolean;
@@ -137,7 +166,7 @@ export const ColumnOfSquares: FC<ColumnOfSquaresProps> = ({ rows, cols, row, gri
 						<SquareItem
 							state={squareState}
 							isPartOfShortestPath={indicesOfShortestPathSquares.includes(squareIdx)}
-							handleClick={(): any => dispatch(clickSquare(rows, cols, squareState, row, col, grid))}
+							handleClick={(): any => dispatch(clickSquare(grid, rows, cols, squareIdx, squareState))}
 						/>
 					</li>
 				);
