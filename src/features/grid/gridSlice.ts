@@ -17,6 +17,10 @@ export type GridT = Uint8Array;
 export type IndicesOfShortestPathT = Uint16Array;
 
 const initGrid = (rows: number = 10, cols: number = 10, isInverted: boolean = false): GridT => {
+	if (rows <= 1 && cols <= 1) {
+		throw new Error("Cannot create a 1x1 or smaller grid");
+	}
+
 	const grid: GridT = new Uint8Array(rows * cols);
 
 	const idx = to1DIdx(cols);
@@ -27,8 +31,17 @@ const initGrid = (rows: number = 10, cols: number = 10, isInverted: boolean = fa
 		}
 	}
 
-	grid[idx(getPseudoRandomIdx(rows), 0)] = SquareState.Start;
-	grid[idx(getPseudoRandomIdx(rows), cols - 1)] = SquareState.End;
+	const startIdx: number = idx(getPseudoRandomIdx(rows), 0);
+	let endIdx: number;
+	/**
+	 * in case there's only one column
+	 */
+	do {
+		endIdx = idx(getPseudoRandomIdx(rows), cols - 1);
+	} while (endIdx === startIdx);
+
+	grid[startIdx] = SquareState.Start;
+	grid[endIdx] = SquareState.End;
 
 	return grid;
 };
@@ -75,6 +88,11 @@ export const slice = createSlice({
 			state.dirtyCols = clamp(action.payload, MIN_COLS, MAX_COLS);
 		},
 		commitResize: (state): void => {
+			if (state.dirtyRows <= 1 && state.dirtyCols <= 1) {
+				state.dirtyRows = 2;
+				state.dirtyCols = 2;
+			}
+
 			state.rows = state.dirtyRows;
 			state.cols = state.dirtyCols;
 			const newGrid: GridT = initGrid(state.dirtyRows, state.dirtyCols, state.isInverted);
