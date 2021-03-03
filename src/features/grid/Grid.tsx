@@ -178,7 +178,15 @@ export const Grid: FC = () => {
 					margin-left: auto;
 					margin-right: auto;
 
+					max-width: 46rem;
+					max-height: 46rem;
+
 					border: 1px solid hsla(0, 0%, 50%, 0.5);
+
+					display: grid;
+
+					grid-template-columns: repeat(${cols}, minmax(35px, 70px));
+					grid-template-rows: repeat(${rows}, minmax(35px, 70px));
 				`}
 			>
 				<RowOfSquares rows={rows}>

@@ -1,4 +1,4 @@
-import { FC } from "react";
+import React, { FC, Fragment } from "react";
 import { css, cx } from "emotion";
 import { useDispatch } from "react-redux";
 
@@ -76,16 +76,11 @@ export const SquareItem: FC<SquareItemProps> = ({
 			onClick={handleClick}
 			className={cx(
 				css`
-					display: flex;
+					min-width: 35px;
+					min-height: 35px;
 
-					justify-content: center;
-					align-items: center;
-
-					min-width: 70px;
-					min-height: 70px;
-
-					/* width: 100%;
-					height: 100%; */
+					max-width: 70px;
+					max-height: 70px;
 
 					margin: 0;
 					padding: 0;
@@ -122,23 +117,7 @@ export interface RowOfSquaresProps {
 export const RowOfSquares: FC<RowOfSquaresProps> = ({ rows, children }) => (
 	<>
 		{new Array(rows).fill(0).map((_, row) => (
-			<ul
-				key={row}
-				className={css`
-					display: flex;
-					flex-direction: row;
-
-					list-style-type: none;
-
-					margin: 0;
-					padding: 0;
-
-					justify-content: center;
-					align-items: center;
-				`}
-			>
-				{children(row)}
-			</ul>
+			<>{children(row)}</>
 		))}
 	</>
 );
@@ -155,22 +134,21 @@ export const ColumnOfSquares: FC<ColumnOfSquaresProps> = ({ rows, cols, row, gri
 	const dispatch = useDispatch();
 
 	return (
-		<>
+		<Fragment key={row}>
 			{new Array(cols).fill(0).map((_, col) => {
 				const squareIdx = to1DIdx(cols)(row, col);
 
 				const squareState = grid[squareIdx];
 
 				return (
-					<li key={`${row}-${col}`}>
-						<SquareItem
-							state={squareState}
-							isPartOfShortestPath={indicesOfShortestPathSquares.includes(squareIdx)}
-							handleClick={(): any => dispatch(clickSquare(grid, rows, cols, squareIdx, squareState))}
-						/>
-					</li>
+					<SquareItem
+						key={`${row}-${col}`}
+						state={squareState}
+						isPartOfShortestPath={indicesOfShortestPathSquares.includes(squareIdx)}
+						handleClick={(): any => dispatch(clickSquare(grid, rows, cols, squareIdx, squareState))}
+					/>
 				);
 			})}
-		</>
+		</Fragment>
 	);
 };
