@@ -25,6 +25,10 @@ export default function App(): JSX.Element {
 				margin-bottom: 2rem;
 
 				text-align: center;
+
+				@media (max-width: 768px) {
+					max-width: 100vw;
+				}
 			`}
 		>
 			<main

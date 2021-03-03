@@ -7,6 +7,12 @@ export const Logo = () => (
 			text-align: left;
 		`}
 	>
-		<img src={`${homepageUrl}assets/grid-logo.png`} alt="Grid logo" />
+		<img
+			src={`${homepageUrl}assets/grid-logo.png`}
+			alt="Grid logo"
+			className={css`
+				max-width: 90vw;
+			`}
+		/>
 	</article>
 );

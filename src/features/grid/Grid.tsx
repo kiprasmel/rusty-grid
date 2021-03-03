@@ -32,12 +32,18 @@ export const Grid: FC = () => {
 
 					display: flex;
 					flex-direction: row;
+					flex-wrap: wrap;
 
 					justify-content: flex-start;
 					align-items: flex-end;
 
-					& > * + * {
-						margin-left: 1rem;
+					@media (max-width: 768px) {
+						max-width: 100vw;
+
+						flex-direction: column;
+
+						justify-content: center;
+						align-items: center;
 					}
 				`}
 			>
@@ -82,10 +88,6 @@ export const Grid: FC = () => {
 								>
 									Columns
 								</p>
-							</th>
-							{/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-							<th>
-								<span />
 							</th>
 						</tr>
 					</thead>
@@ -144,49 +146,54 @@ export const Grid: FC = () => {
 									`}
 								/>
 							</td>
-
-							<td>
-								<Button
-									className={css`
-										margin-left: 2rem;
-									`}
-									onClick={() => dispatch(commitResize())}
-								>
-									<span className={css``}>Generate</span>
-								</Button>
-							</td>
-
-							<td>
-								<Button
-									className={css`
-										margin-left: 2rem;
-									`}
-									onClick={() => dispatch(invert(grid, rows, cols))}
-								>
-									<span className={css``}>Invert</span>
-								</Button>
-							</td>
 						</tr>
 					</tbody>
 				</table>
+
+				<div
+					className={css`
+						display: flex;
+						flex-direction: row;
+
+						& > * {
+							margin-left: 2rem;
+						}
+
+						@media (max-width: 768px) {
+							flex-direction: column;
+
+							& > * {
+								margin-left: 0;
+								margin-top: 1.5rem;
+							}
+						}
+					`}
+				>
+					<Button onClick={() => dispatch(commitResize())}>Generate</Button>
+					<Button onClick={() => dispatch(invert(grid, rows, cols))}>Invert</Button>
+				</div>
 			</article>
 			{/* /generator */}
 
 			{/* grid */}
 			<article
 				className={css`
-					margin-left: auto;
-					margin-right: auto;
+					display: grid;
 
-					max-width: 46rem;
-					max-height: 46rem;
+					grid-template-columns: repeat(${cols}, 1fr);
+					grid-template-rows: repeat(${rows}, 1fr);
+
+					width: 42rem;
+					height: 42rem;
 
 					border: 1px solid hsla(0, 0%, 50%, 0.5);
 
-					display: grid;
-
-					grid-template-columns: repeat(${cols}, minmax(35px, 70px));
-					grid-template-rows: repeat(${rows}, minmax(35px, 70px));
+					@media (max-width: 768px) {
+						width: 90vw;
+						height: 90vw;
+						margin-left: auto;
+						margin-right: auto;
+					}
 				`}
 			>
 				<RowOfSquares rows={rows}>

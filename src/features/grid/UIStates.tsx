@@ -20,7 +20,19 @@ export const UIStates: FC = () => {
 	}
 
 	return (
-		<article>
+		<article
+			className={css`
+				width: 42rem;
+				height: 42rem;
+
+				@media (max-width: 768px) {
+					width: 90vw;
+					height: 90vw;
+					margin-left: auto;
+					margin-right: auto;
+				}
+			`}
+		>
 			{/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
 			<h2
 				title="Click to hide"
@@ -85,11 +97,12 @@ export const UIStates: FC = () => {
 					`}
 				>
 					<Label label="Filled (default)">
-						<SquareItem state={SquareState.Filled} />
+						<SquareItem standalone state={SquareState.Filled} />
 					</Label>
 
 					<Label label="Hover">
 						<SquareItem
+							standalone
 							state={SquareState.Clear}
 							className={css`
 								background: hsla(0, 0%, 95%, 0.95);
@@ -99,6 +112,7 @@ export const UIStates: FC = () => {
 
 					<Label label="Down">
 						<SquareItem
+							standalone
 							state={SquareState.Filled}
 							className={css`
 								background: hsla(0, 0%, 50%, 0.5);
@@ -107,19 +121,19 @@ export const UIStates: FC = () => {
 					</Label>
 
 					<Label label="Clear">
-						<SquareItem state={SquareState.Clear} />
+						<SquareItem standalone state={SquareState.Clear} />
 					</Label>
 
 					<Label label="Start point">
-						<SquareItem state={SquareState.Start} />
+						<SquareItem standalone state={SquareState.Start} />
 					</Label>
 
 					<Label label="End point">
-						<SquareItem state={SquareState.End} />
+						<SquareItem standalone state={SquareState.End} />
 					</Label>
 
 					<Label label="Shortest path">
-						<SquareItem state={SquareState.Clear} isPartOfShortestPath />
+						<SquareItem standalone state={SquareState.Clear} isPartOfShortestPath />
 					</Label>
 				</div>
 			</div>

@@ -45,12 +45,14 @@ export const swapSquareStateInGrid = (grid: GridT, squareIdx: number, squareStat
 export type SquareItemProps = {
 	state: SquareState;
 	isPartOfShortestPath?: boolean;
+	standalone?: boolean;
 	handleClick?: () => any;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
 
 export const SquareItem: FC<SquareItemProps> = ({
 	state,
 	isPartOfShortestPath = false,
+	standalone = false,
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	handleClick = (): void => {},
 	className,
@@ -76,14 +78,11 @@ export const SquareItem: FC<SquareItemProps> = ({
 			onClick={handleClick}
 			className={cx(
 				css`
-					min-width: 35px;
-					min-height: 35px;
-
-					max-width: 70px;
-					max-height: 70px;
-
 					margin: 0;
 					padding: 0;
+
+					${standalone ? "min-width: 5vh" : ""};
+					${standalone ? "min-height: 5vh" : ""};
 
 					background-color: ${backgroundColor};
 
