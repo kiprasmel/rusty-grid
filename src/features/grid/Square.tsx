@@ -117,7 +117,7 @@ export interface RowOfSquaresProps {
 export const RowOfSquares: FC<RowOfSquaresProps> = ({ rows, children }) => (
 	<>
 		{new Array(rows).fill(0).map((_, row) => (
-			<>{children(row)}</>
+			<Fragment key={row}>{children(row)}</Fragment>
 		))}
 	</>
 );
