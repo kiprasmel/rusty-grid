@@ -3,7 +3,7 @@ import { css, cx } from "emotion";
 import { useDispatch } from "react-redux";
 
 // eslint-disable-next-line import/no-cycle
-import { clickSquare, GridT, IndicesOfShortestPathT } from "./gridSlice";
+import { clickSquare, dragOnSquare, GridT, IndicesOfShortestPathT } from "./gridSlice";
 import { to1DIdx } from "./utils";
 
 export enum SquareState {
@@ -46,13 +46,14 @@ export type SquareItemProps = {
 	state: SquareState;
 	isPartOfShortestPath?: boolean;
 	handleClick?: () => any;
+	handleMouseDragOnSquare?: () => any;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
 
 export const SquareItem: FC<SquareItemProps> = ({
 	state,
 	isPartOfShortestPath = false,
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	handleClick = (): void => {},
+	handleMouseDragOnSquare = (): void => {},
 	className,
 	children,
 	...rest
@@ -69,11 +70,23 @@ export const SquareItem: FC<SquareItemProps> = ({
 					[SquareState.Clear]: "white", // eslint-disable-line indent
 			  }[state];
 
+	const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void => {
+		// eslint-disable-next-line no-bitwise
+		const wasMouse1Pressed: boolean = !!(e.buttons & 0b01);
+
+		if (wasMouse1Pressed) {
+			handleMouseDragOnSquare();
+		}
+	};
+
 	return (
 		<button
 			type="button"
 			{...rest}
-			onClick={handleClick}
+			onMouseUp={handleClick}
+			onPointerUp={handleClick}
+			onMouseEnter={handleMouseEnter}
+			onMouseLeave={handleMouseEnter} /** on leave for the very first square in the drag path */
 			className={cx(
 				css`
 					display: flex;
@@ -167,6 +180,9 @@ export const ColumnOfSquares: FC<ColumnOfSquaresProps> = ({ rows, cols, row, gri
 							state={squareState}
 							isPartOfShortestPath={indicesOfShortestPathSquares.includes(squareIdx)}
 							handleClick={(): any => dispatch(clickSquare(grid, rows, cols, squareIdx, squareState))}
+							handleMouseDragOnSquare={(): any =>
+								dispatch(dragOnSquare(grid, rows, cols, squareIdx, squareState))
+							}
 						/>
 					</li>
 				);

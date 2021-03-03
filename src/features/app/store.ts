@@ -12,8 +12,18 @@ export const store = configureStore({
 		 * allow using `Uint8Array`s
 		 */
 		serializableCheck: {
-			ignoredActions: ["grid/clickSquare", "grid/invert"],
-			ignoredPaths: ["grid.grid", "grid.indicesOfShortestPathSquares"],
+			ignoredActions: [
+				"grid/clickSquare", //
+				"grid/invert",
+				"grid/dragOnSquare",
+				"grid/beginMouseDrag",
+				"grid/endMouseDrag",
+			],
+			ignoredPaths: [
+				"grid.grid", //
+				"grid.indicesOfShortestPathSquares",
+				"grid.alreadySwappedSquaresInThisDrag",
+			],
 		},
 	}),
 });

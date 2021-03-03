@@ -47,6 +47,9 @@ interface State {
 
 	isInverted: boolean;
 	hideUIStates: boolean;
+
+	alreadySwappedSquaresInThisDrag: IndicesOfShortestPathT;
+	isDragging: boolean;
 }
 
 const getDefaultState = (): State => ({
@@ -59,6 +62,8 @@ const getDefaultState = (): State => ({
 	indicesOfShortestPathSquares: new Uint16Array(),
 	isInverted: false,
 	hideUIStates: false,
+	alreadySwappedSquaresInThisDrag: new Uint16Array(),
+	isDragging: false,
 });
 
 const initialState: State = getDefaultState();
@@ -123,6 +128,10 @@ export const slice = createSlice({
 					indicesOfShortestPathSquares: Uint16Array;
 				}>
 			): void => {
+				if (state.isDragging) {
+					return;
+				}
+
 				const { grid, squareState, hasShortestPath, indicesOfShortestPathSquares } = action.payload;
 
 				if ([SquareState.Start, SquareState.End].includes(squareState)) {
@@ -147,6 +156,56 @@ export const slice = createSlice({
 				};
 			},
 		},
+		dragOnSquare: {
+			reducer: (
+				state,
+				action: PayloadAction<{
+					grid: GridT;
+					squareIdx: number;
+					squareState: SquareState;
+					hasShortestPath: boolean;
+					indicesOfShortestPathSquares: Uint16Array;
+				}>
+			) => {
+				const { grid, squareIdx, squareState, hasShortestPath, indicesOfShortestPathSquares } = action.payload;
+
+				if ([SquareState.Start, SquareState.End].includes(squareState)) {
+					return;
+				}
+
+				if (!state.alreadySwappedSquaresInThisDrag.includes(squareIdx)) {
+					state.alreadySwappedSquaresInThisDrag = new Uint16Array([
+						...state.alreadySwappedSquaresInThisDrag.values(),
+						squareIdx,
+					]);
+
+					state.grid = grid;
+					state.indicesOfShortestPathSquares = indicesOfShortestPathSquares;
+					state.hasShortestPath = hasShortestPath;
+				}
+			},
+			prepare: (grid: GridT, rows: number, cols: number, squareIdx: number, squareState: SquareState) => {
+				const newGrid: GridT = swapSquareStateInGrid(grid, squareIdx, squareState);
+				const indicesOfShortestPathSquares: IndicesOfShortestPathT = computeShortestPath(newGrid, rows, cols);
+
+				return {
+					payload: {
+						grid: newGrid,
+						squareIdx,
+						squareState,
+						hasShortestPath: indicesOfShortestPathSquares.length > 0,
+						indicesOfShortestPathSquares,
+					},
+				};
+			},
+		},
+		beginMouseDrag: (state) => {
+			state.isDragging = true;
+		},
+		endMouseDrag: (state) => {
+			state.alreadySwappedSquaresInThisDrag = new Uint16Array();
+			state.isDragging = false;
+		},
 	},
 });
 
@@ -158,6 +217,9 @@ export const {
 	invert,
 	toggleUIStates,
 	clickSquare,
+	dragOnSquare,
+	beginMouseDrag,
+	endMouseDrag,
 } = slice.actions;
 
 export default slice.reducer;

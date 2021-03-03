@@ -3,7 +3,16 @@ import { css } from "emotion";
 import { useSelector, useDispatch } from "react-redux";
 
 import { RootState } from "../app/store";
-import { commitResize, invert, eventuallySetCols, eventuallySetRows, GridT, IndicesOfShortestPathT } from "./gridSlice";
+import {
+	commitResize, //
+	invert,
+	eventuallySetCols,
+	eventuallySetRows,
+	GridT,
+	IndicesOfShortestPathT,
+	beginMouseDrag,
+	endMouseDrag,
+} from "./gridSlice";
 import { Button } from "./Button";
 import { RowOfSquares, ColumnOfSquares } from "./Square";
 
@@ -20,6 +29,19 @@ export const Grid: FC = () => {
 	const indicesOfShortestPathSquares: IndicesOfShortestPathT = useSelector(
 		(state: RootState) => state.grid.indicesOfShortestPathSquares
 	);
+
+	const handleMouseDown = (e: React.MouseEvent) => {
+		e.preventDefault();
+		/** begin allow swapping at most once */
+		dispatch(beginMouseDrag());
+	};
+
+	const handleMouseUp = (e: React.MouseEvent) => {
+		e.preventDefault();
+
+		/** remove restriction */
+		dispatch(endMouseDrag());
+	};
 
 	return (
 		<>
@@ -173,7 +195,10 @@ export const Grid: FC = () => {
 			{/* /generator */}
 
 			{/* grid */}
+			{/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
 			<article
+				onMouseDown={handleMouseDown}
+				onMouseUp={handleMouseUp}
 				className={css`
 					margin-left: auto;
 					margin-right: auto;
