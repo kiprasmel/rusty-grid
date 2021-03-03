@@ -52,3 +52,7 @@ yarn link shortest-path
 ```sh
 yarn start
 ```
+
+## Post mortem
+
+[./POST-MORTEM.md](./POST-MORTEM.md)
