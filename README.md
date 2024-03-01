@@ -32,19 +32,8 @@ git clone https://github.com/kiprasmel/rusty-grid.git
 # or:     git clone git@github.com:kiprasmel/rusty-grid.git
 
 cd rusty-grid/
-yarn install
 
-# needs to be rebuilt every time you update rust code
-# note - the first time will take a while
-cd shortest-path/
-wasm-pack build 
-
-cd pkg/
-yarn link
-
-cd ../../
-yarn link shortest-path
-
+./setup.sh
 ```
 
 ### Run
